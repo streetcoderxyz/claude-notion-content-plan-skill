@@ -1,5 +1,5 @@
 ---
-name: notion-content-plan
+name: claude-notion-content-plan-skill
 description: Generate a monthly Vietnamese content plan in Notion — wrapper page + inline database + N daily rows — for Omini Platform, Omini Care, or any product following the same 7-column schema.
 ---
 
