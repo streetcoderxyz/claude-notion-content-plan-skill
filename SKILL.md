@@ -1,5 +1,5 @@
 ---
-name: claude-notion-content-plan-skill
+name: notion-content-plan
 description: Generate a monthly Vietnamese content plan in Notion — wrapper page + inline database + N daily rows — for Omini Platform, Omini Care, or any product following the same 7-column schema.
 ---
 
@@ -153,13 +153,20 @@ Weekly recaps land on 7/14/21/28 (or nearest Sunday). When a recap day collides 
 
 One call to `mcp__notion-create-pages` with `parent={data_source_id: <ds_id>}` and `pages: [...30 entries]`. The MCP tool accepts up to 100 pages per call.
 
-### Step 8 — Report
+### Step 8 — Report & suggest next steps
 
 Output to the user:
-- URL of the wrapper page
-- Count of rows created
+- URL of the wrapper page + row count
 - List of holiday-anchored dates with their topics
-- Suggested next step: hand off rows to `chatgpt-create-pharmacy-post` / `chatgpt-create-omini-care-post` for drafting
+- The post-type mix actually used (so they can eyeball the balance)
+
+Then **always surface the downstream pipeline** so the plan doesn't stall as a static table. Present it as concrete, ordered next steps — a plan only has value once its rows become drafted, scheduled posts:
+
+1. **Draft each post** → `chatgpt-create-pharmacy-post` (Platform) or `chatgpt-create-omini-care-post` (Care). Each draft saves a `post.txt` + `image.png` in a per-day folder.
+2. **Schedule the drafts** → `facebook-schedule-business-suite` pushes each day's folder into the Business Suite content calendar at a chosen time (default 19:00).
+3. *(Optional)* Cross-post finished media → `facebook-post-media`, `zalo-post-timeline`, `tiktok-share-post-video`, `youtube-share-post-video`.
+
+End by **offering to kick off step 1 now** (or to print the plan as DRY_RUN markdown for review first). Name the exact skill for the user's product so they can act in one step.
 
 ## Rules
 
@@ -190,7 +197,7 @@ Output to the user:
 
 - `references/vn-holidays.md` — Curated Vietnamese + international observances relevant to pharmacy/health/family content. Loaded on demand.
 - Example plans: `Content Plan Omini Platform 06/2026`, `Content Plan Omini Care 06/2026` (Notion).
-- Related skills: `chatgpt-create-pharmacy-post`, `chatgpt-create-omini-care-post`, `campaign-plan`, `content-write`.
+- Related skills (downstream pipeline): `chatgpt-create-pharmacy-post`, `chatgpt-create-omini-care-post` (draft) → `facebook-schedule-business-suite` (schedule) → `facebook-post-media`, `zalo-post-timeline`, `tiktok-share-post-video`, `youtube-share-post-video` (cross-post). Also: `campaign-plan`, `content-write`.
 
 ## Future hooks (not yet implemented)
 
