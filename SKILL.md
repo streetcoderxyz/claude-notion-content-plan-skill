@@ -45,10 +45,54 @@ Every row uses exactly these 7 properties:
 | `Ngày` | title (text) | Format `DD/MM/YYYY` — IS the row title |
 | `Trạng thái` | select | `Lên lịch` (default), `Đã đăng` |
 | `Loại bài viết` | select | 12 options in this exact order/color: `Tổng kết:yellow`, `Pháp lý:orange`, `Giáo dục:purple`, `An toàn:pink`, `Kiến thức:brown`, `Hình ảnh nghề:gray`, `Vận hành:default`, `Cộng đồng:green`, `Chăm sóc KH:blue`, `Nghiệp vụ:red`, `Giá trị:orange`, `Quản lý:purple` |
-| `Chủ đề` | text | Headline. Prefix with emoji + holiday tag when the day has one (e.g. `🎈 Quốc tế Thiếu nhi (1/6) — …`) |
+| `Chủ đề` | text | Headline. Prefix with emoji + holiday tag when the day has one (e.g. `🎈 Quốc tế Thiếu nhi (1/6): …`) |
 | `Nội dung chính` | text | 1–2 sentences of post substance |
 | `CTA` | text | Short — `Dùng thử`, `Lưu bài`, `Tư vấn`, `Tham gia group`, `Xem video`, `Theo dõi` |
 | `Mục tiêu` | text | Conversion goal — `Chuyển đổi trial`, `Brand awareness`, `Community building`, etc. |
+
+## Brand voice (applies to the 4 Vietnamese text columns ONLY)
+
+These rules govern `Chủ đề`, `Nội dung chính`, `CTA`, `Mục tiêu`. They do **not** apply to
+this document or to any English-language report you write back to the user.
+
+### Banned words
+
+| Never write | Always write | Why |
+|---|---|---|
+| `tiệm`, `cửa tiệm`, `chủ tiệm` | `nhà thuốc và quầy thuốc`, `chủ nhà thuốc và quầy thuốc` | *Nhà thuốc* and *quầy thuốc* are two distinct license types in VN. Omini serves both; `tiệm` is colloquial and silently excludes half the audience. |
+
+Exception: when a sentence describes **one specific business** (a case study), the singular
+`một nhà thuốc` / `một chủ nhà thuốc` reads better than the full pair. Use the pair when
+addressing the audience as a whole.
+
+Watch for `quầy` used to mean *the sales counter* — now ambiguous against `quầy thuốc` the
+business. Rewrite: `tại quầy` → `tại chỗ`, `ai đứng quầy` → `ai đứng bán`,
+`sắp xếp quầy` → `sắp xếp khu bán`.
+
+### No dash punctuation
+
+Do not use `—` (em), `–` (en), or `-` (hyphen) as punctuation in the four text columns.
+Dash-joined clauses are the single loudest AI tell in Vietnamese marketing copy. Replace with
+a comma, a colon, `và`, or a full stop:
+
+| Instead of | Write |
+|---|---|
+| `Lãi trên giấy nhưng quỹ vẫn cạn — vấn đề ở dòng tiền.` | `Lãi trên giấy nhưng quỹ vẫn cạn, vấn đề ở dòng tiền.` |
+| `thu – chi – công nợ` | `thu, chi và công nợ` |
+| `hộp – vỉ – viên` | `hộp, vỉ, viên` |
+| `1–7/8` | `1 đến 7/8` |
+| `D1 → D7 → D30` | `D1, D7, D30` |
+| `🩺 Ngày Viêm gan (28/7) — Tầm soát B, C` | `🩺 Ngày Viêm gan (28/7): Tầm soát B, C` |
+
+Markdown bullet markers (`- item`) in the wrapper page are fine; Notion renders them as
+bullet dots, so no dash is visible to the reader.
+
+### `Mục tiêu` vocabulary
+
+Reuse the established set rather than inventing goals: `Chuyển đổi trial`,
+`Brand awareness`, `Community building`, `Feature adoption`, `Educate market`,
+`Activation rate`, `Hiệu quả vận hành`, `Tạo niềm tin pháp lý`, `Tạo niềm tin nghiệp vụ`.
+Append ` + bám dịp lễ` on holiday-anchored rows.
 
 ## Workflow
 
@@ -60,13 +104,27 @@ Compute the number of days in `MONTH` (28–31).
 
 ### Step 2 — Load prior context
 
-Fetch the 1–2 most recent prior plans for the same product to mirror tone, post-type ratio, and CTA vocabulary:
+Fetch the **two** most recent prior plans for the same product. Two months is not optional:
+Rule 5 forbids duplicate topics within 60 days, and you cannot enforce that from one month.
 
 ```
-mcp__notion-fetch with id=<parent page id>  // list children
-// find most recent "Content Plan <Product> <prev MM/YYYY>"
-// query its data source for ~5 sample rows
+mcp__notion-fetch with id=<parent page id>          // list children
+// find the two most recent "Content Plan <Product> <prev MM/YYYY>"
+// for EACH, fetch the wrapper page to get its collection:// data-source URL, then:
+mcp__notion-query-data-sources
+  SELECT "Ngày", "Loại bài viết", "Chủ đề" FROM "collection://<ds_id>"
 ```
+
+Pull **every** row, not a sample — you are building a de-dup blocklist, and a 5-row sample
+will let a near-duplicate through. Keep the full `Chủ đề` list in working memory while
+drafting Step 6.
+
+De-dup on *topic*, not wording. These are duplicates even though the words differ:
+`Onboarding D1: 7 bước setup` vs `Onboarding D7: 3 tính năng nâng cao` are **fine** (a
+deliberate series), but `Quản lý nhiều chi nhánh trên một tài khoản` vs
+`Case study: chuỗi 3 nhà thuốc chuẩn hoá giá` are **too close** — both are "multi-location".
+When two candidates collide, keep the one that fits the month's roadmap phase and re-draft
+the other on a different axis (how-to vs case study vs legal vs community).
 
 If `PRODUCT` is `Omini Platform`, also fetch the GTM roadmap to pick the right phase emphasis:
 - Months 1–2 → foundation, content engine
@@ -74,9 +132,28 @@ If `PRODUCT` is `Omini Platform`, also fetch the GTM roadmap to pick the right p
 - Months 3–4 → community, trust
 - Months 4–6 → expansion, retention
 
+Prior months also set the **format arc** — read the wrapper-page callout of the previous
+month and advance it rather than repeating it (e.g. 06 text long-form → 07 media comeback →
+08 series + UGC). State the new month's format in the wrapper callout.
+
 ### Step 3 — Load holidays
 
-Either use the user-supplied `HOLIDAYS` list, or load `references/vn-holidays.md` (see below). Filter to entries whose `date` falls within the target month.
+Two sources, both required.
+
+**Fixed-date:** load `references/vn-holidays.md` (or the user-supplied `HOLIDAYS` list) and
+filter to the target month.
+
+**Lunar:** Tết, Vu Lan, Trung Thu and friends drift every year. Never guess or recall them —
+run the bundled helper:
+
+```bash
+python3 scripts/lunar_holidays.py <MM> <YYYY>       # holidays in that solar month
+python3 scripts/lunar_holidays.py <MM> <YYYY> --all # every day + lunar date, for spot checks
+```
+
+Merge both lists. If a lunar and a fixed holiday land on adjacent days (e.g. Vu Lan 27/8 and
+Ngày Y tế 28/8) keep both, on their own days. If they land on the *same* day, apply the
+"don't stack holidays" note in `references/vn-holidays.md` and pick by audience.
 
 ### Step 4 — Create wrapper page
 
@@ -147,13 +224,54 @@ For each day `DD` from 1 to `<days in month>`:
 | Tổng kết | 5 (one per week + month-end) |
 | Chăm sóc KH | 4 |
 
+Both tables total 30. For a **31-day** month add one row to the type that carries the month's
+theme (retention month → `Chăm sóc KH`; launch month → `Giá trị`). For a **28/29-day** month
+drop from the largest bucket. Tally the mix before writing rows and again in the Step 9 report
+— arithmetic drift here is easy and shows up as a lopsided calendar.
+
 Weekly recaps land on 7/14/21/28 (or nearest Sunday). When a recap day collides with a holiday, **combine**: title becomes `🎉 <Holiday> + Tóm tắt tuần N`, content lists both the holiday angle and the recap bullets.
 
 ### Step 7 — Batch-create rows
 
-One call to `mcp__notion-create-pages` with `parent={data_source_id: <ds_id>}` and `pages: [...30 entries]`. The MCP tool accepts up to 100 pages per call.
+Call `mcp__notion-create-pages` with `parent={data_source_id: <ds_id>}`.
 
-### Step 8 — Report & suggest next steps
+**Send at most ~10 rows per call.** The tool's stated limit is 100 pages, but that is not the
+binding constraint: a full month of Vietnamese rows is ~12 KB of UTF-8 and the tool input gets
+truncated mid-string, failing with `InputValidationError: could not be parsed as JSON`. Three
+calls of 10–11 rows is the reliable shape for a 31-day plan. Do not try to "fix" the JSON on
+retry — split the batch instead.
+
+If a batch fails, check what actually landed (`SELECT "Ngày" ...`) before resending, so you
+do not create duplicate rows for the same date.
+
+### Step 8 — Verify before reporting
+
+Run these two checks and fix anything they surface. Do not report success until both are clean.
+
+**1. Coverage** — every date present exactly once:
+
+```sql
+SELECT COUNT(*) AS rows, COUNT(DISTINCT "Ngày") AS unique_dates
+FROM "collection://<ds_id>"
+```
+
+Both numbers must equal the day count of the month.
+
+**2. Brand voice** — no banned word, no dash punctuation, in any of the 4 text columns:
+
+```sql
+SELECT "Ngày", "Chủ đề" FROM "collection://<ds_id>"
+WHERE "Chủ đề" LIKE '%tiệm%' OR "Nội dung chính" LIKE '%tiệm%'
+   OR "Chủ đề" LIKE '%—%'   OR "Nội dung chính" LIKE '%—%'
+   OR "Chủ đề" LIKE '%–%'   OR "Nội dung chính" LIKE '%–%'
+   OR "Chủ đề" LIKE '%-%'   OR "Nội dung chính" LIKE '%-%'
+   OR "CTA" LIKE '%-%'      OR "Mục tiêu" LIKE '%-%'
+```
+
+Must return zero rows. Patch offenders with `mcp__notion-update-page`
+(`command: "update_properties"`, one call per row).
+
+### Step 9 — Report & suggest next steps
 
 Output to the user:
 - URL of the wrapper page + row count
@@ -179,10 +297,35 @@ End by **offering to kick off step 1 now** (or to print the plan as DRY_RUN mark
    - The product's roadmap phase (for Platform)
    - The current season (for Care)
    - The holiday list (override any of the above)
-6. **Vietnamese only** for `Chủ đề`, `Nội dung chính`, `CTA`, `Mục tiêu`. The schema labels themselves are Vietnamese.
+6. **Vietnamese only** for `Chủ đề`, `Nội dung chính`, `CTA`, `Mục tiêu`. The schema labels themselves are Vietnamese. Obey the **Brand voice** section above: no `tiệm`, no dash punctuation.
 7. **CTA vocabulary is fixed** — pick from: `Dùng thử`, `Dùng thử ngay`, `Lưu bài`, `Tư vấn`, `Tư vấn miễn phí`, `Theo dõi`, `Xem video`, `Xem hướng dẫn`, `Đăng ký live`, `Tham gia group`, `Tải checklist`, `Tải giáo án`, `Xem báo cáo`. Don't invent new ones.
 8. **DRY_RUN mode prints to stdout, never to Notion.** Useful for review before bulk creation.
 9. **Confirm with user before pushing 30+ rows** if you're unsure about the theme direction — those rows live under the user's brand.
+
+## Editing a plan after it exists
+
+Revisions ("drop that word", "reword the holiday rows") are common. Two traps:
+
+**Never `replace_content` the wrapper page without re-declaring the database.** The inline
+database is a *child block* of the wrapper page, so replacing the page content deletes it and
+every row with it. Notion's MCP tool guards this with a `validation_error` listing what would
+be deleted — that error is a safety net, not an obstacle. Resolve it by appending the database
+tag to your new content:
+
+```
+<database url="https://app.notion.com/p/<database_id>">…title…</database>
+```
+
+Never pass `allow_deleting_content: true` on a wrapper page. For small intro tweaks prefer
+`command: "update_content"` with search-and-replace pairs, which cannot orphan children.
+
+**Rows are updated one at a time.** `mcp__notion-update-page` takes a single `page_id`. Fire
+them in parallel batches of ~6. Send only the properties that changed; omitted properties are
+left alone.
+
+Before a bulk reword, list which rows actually need it — on a 31-row plan a rule change
+typically hits 20–25, and touching the clean ones risks introducing new drift. Re-run the
+Step 8 verification afterwards.
 
 ## What NOT to do
 
@@ -195,12 +338,14 @@ End by **offering to kick off step 1 now** (or to print the plan as DRY_RUN mark
 
 ## References
 
-- `references/vn-holidays.md` — Curated Vietnamese + international observances relevant to pharmacy/health/family content. Loaded on demand.
-- Example plans: `Content Plan Omini Platform 06/2026`, `Content Plan Omini Care 06/2026` (Notion).
+- `references/vn-holidays.md` — Curated Vietnamese + international observances relevant to pharmacy/health/family content. Loaded on demand. Fixed-date only.
+- `scripts/lunar_holidays.py` — Resolves lunar holidays (Tết, Vu Lan, Trung Thu, Ông Công Ông Táo…) for any solar month. Ho Ngoc Duc conversion, UTC+7. Stdlib only, no deps. Verified against published dates for Tết 2024/2025/2026, Trung Thu 2024/2026, Vu Lan 2026.
+- Example plans: `Content Plan Omini Platform 06/2026`, `Content Plan Omini Care 06/2026`, `Content Plan Omini Platform 08/2026` (Notion).
 - Related skills (downstream pipeline): `chatgpt-create-pharmacy-post`, `chatgpt-create-omini-care-post` (draft) → `facebook-schedule-business-suite` (schedule) → `facebook-post-media`, `zalo-post-timeline`, `tiktok-share-post-video`, `youtube-share-post-video` (cross-post). Also: `campaign-plan`, `content-write`.
 
 ## Future hooks (not yet implemented)
 
 - `--from-prior <month>` flag: clone a prior month's structure, shift dates, regenerate only the holiday-anchored rows.
 - `--clone-to-google-calendar`: after creating the plan, push each row as an event on a publishing calendar.
-- Auto-detection of recurring holidays (Tết, Trung thu) and product-specific events (Omini anniversary).
+- Product-specific recurring events (Omini anniversary, release milestones) alongside the calendar holidays.
+- A `--lint` mode that runs the Step 8 verification against an existing plan without creating anything.
