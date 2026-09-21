@@ -1,6 +1,6 @@
 ---
-name: notion-omini-care-content-plan
-description: Generate a monthly Vietnamese content plan in Notion — wrapper page + inline database + N daily rows — for Omini Care, Omini Platform, or any product following the same 7-column schema.
+name: notion-content-plan
+description: Generate a monthly Vietnamese content plan in Notion — wrapper page + inline database + N daily rows — for any product following the canonical 7-column schema (Omini Platform, Omini Care, or a new brand). Triggers on "content plan tháng X", "create monthly content plan", "lên kế hoạch nội dung", "30 bài cho tháng tới".
 ---
 
 # Notion — Monthly Content Plan Generator

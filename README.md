@@ -1,21 +1,22 @@
-# notion-omini-care-content-plan
+# notion-content-plan
 
-A Claude Code skill that generates a monthly Vietnamese content plan in Notion — wrapper page + inline database + N daily rows — using the canonical 7-column schema shared by `Content Plan Omini Platform` and `Content Plan Omini Care`.
+A Claude Code skill that generates a monthly Vietnamese content plan in Notion — wrapper page + inline database + N daily rows — using the canonical 7-column schema shared by `Content Plan Omini Platform` and `Content Plan Omini Care`. Product-agnostic: pass any `PRODUCT`.
 
 ## Install
 
 ```bash
 # Clone next to your other Claude skills
 cd ~/.claude/skills
-git clone git@github.com:streetcoderxyz/claude-notion-omini-care-content-plan-skill.git notion-omini-care-content-plan
+git clone git@github.com:streetcoderxyz/claude-notion-omini-care-content-plan-skill.git notion-content-plan
 ```
 
-Skills are auto-discovered by Claude Code from `~/.claude/skills/`. Invoke with `/notion-omini-care-content-plan`.
+Skills are auto-discovered by Claude Code from `~/.claude/skills/`. Invoke with `/notion-content-plan`.
 
 ## Usage
 
 ```
-/notion-omini-care-content-plan PRODUCT="Omini Care" MONTH="10/2026"
+/notion-content-plan PRODUCT="Omini Platform" MONTH="10/2026"
+/notion-content-plan PRODUCT="Omini Care"     MONTH="10/2026"
 ```
 
 Or just describe what you want — Claude will route to the skill if it matches:
