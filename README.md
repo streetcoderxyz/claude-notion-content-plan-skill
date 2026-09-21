@@ -7,7 +7,7 @@ A Claude Code skill that generates a monthly Vietnamese content plan in Notion â
 ```bash
 # Clone next to your other Claude skills
 cd ~/.claude/skills
-git clone git@github.com:streetcoderxyz/claude-notion-omini-care-content-plan-skill.git notion-content-plan
+git clone git@github.com:streetcoderxyz/claude-notion-content-plan-skill.git notion-content-plan
 ```
 
 Skills are auto-discovered by Claude Code from `~/.claude/skills/`. Invoke with `/notion-content-plan`.
