@@ -1,6 +1,6 @@
 ---
 name: notion-content-plan
-description: Generate a monthly Vietnamese content plan in Notion — wrapper page + inline database + N daily rows — for any product following the canonical 7-column schema (Omini Platform, Omini Care, or a new brand). Triggers on "content plan tháng X", "create monthly content plan", "lên kế hoạch nội dung", "30 bài cho tháng tới".
+description: Generate a monthly Vietnamese content plan in Notion — wrapper page + inline database + N daily rows — for any product following the canonical 7-column schema (plus Chờ gì / Phương án B gating for rows that depend on events, approvals or unreleased features) (Omini Platform, Omini Care, or a new brand). Triggers on "content plan tháng X", "create monthly content plan", "lên kế hoạch nội dung", "30 bài cho tháng tới".
 ---
 
 # Notion — Monthly Content Plan Generator
@@ -38,7 +38,7 @@ Do NOT use for:
 
 ## Canonical schema (do not deviate)
 
-Every row uses exactly these 7 properties:
+Every row uses these 7 core properties, plus the 2 gating columns described below:
 
 | Property | Type | Notes |
 |---|---|---|
@@ -49,6 +49,16 @@ Every row uses exactly these 7 properties:
 | `Nội dung chính` | text | 1–2 sentences of post substance |
 | `CTA` | text | Short — `Dùng thử`, `Lưu bài`, `Tư vấn`, `Tham gia group`, `Xem video`, `Theo dõi` |
 | `Mục tiêu` | text | Conversion goal — `Chuyển đổi trial`, `Brand awareness`, `Community building`, etc. |
+
+**Gating columns (added 11/2026).** Some rows cannot be drafted when the plan is written: they depend on an event that hasn't happened, an approval, an unreleased feature, a customer's consent, or end-of-month numbers. Those rows get:
+
+| Property | Type | Notes |
+|---|---|---|
+| `Trạng thái` = `Chờ điều kiện` | select option (red) | Instead of `Lên lịch`. Drafting skills skip these rows. |
+| `Chờ gì` | text | The concrete condition, e.g. `Thể lệ quiz được duyệt`, `Buổi quay số 25/11 xong`, `Nhà thuốc đồng ý làm case`. |
+| `Phương án B` | text | A backup post that can go out **on the same day** if the condition fails. It must not depend on anything itself. |
+
+Every gated row needs both columns filled. A gated row without a Phương án B is how a calendar ends up with empty days the week a gate slips. See Step 6b.
 
 ## Brand voice (applies to the 4 Vietnamese text columns ONLY)
 
@@ -132,6 +142,10 @@ If `PRODUCT` is `Omini Platform`, also fetch the GTM roadmap to pick the right p
 - Months 3–4 → community, trust
 - Months 4–6 → expansion, retention
 
+**Query each prior month's data source separately** (`mode: "rows"`, one call per month). A single SQL query across two data sources needs a Notion Business plan, and this workspace doesn't have one; the call fails with `entitlement_required`.
+
+Also read `references/competitor-patterns.md` before drafting. It records what Vietnamese pharmacy-software and pharma pages (Buymed, MISA, KiotViet, Sapo, TLGo) do, and the gaps none of them fill. Use it to pick formats and series, not to copy topics.
+
 Prior months also set the **format arc** — read the wrapper-page callout of the previous
 month and advance it rather than repeating it (e.g. 06 text long-form → 07 media comeback →
 08 series + UGC). State the new month's format in the wrapper callout.
@@ -174,7 +188,7 @@ Use `mcp__notion-create-database` with `parent={page_id: <wrapper page id>}` and
 ```sql
 CREATE TABLE (
   "Ngày" TITLE,
-  "Trạng thái" SELECT('Lên lịch':default, 'Đã đăng':green),
+  "Trạng thái" SELECT('Lên lịch':default, 'Đã đăng':green, 'Chờ điều kiện':red),
   "Loại bài viết" SELECT(
     'Tổng kết':yellow, 'Pháp lý':orange, 'Giáo dục':purple,
     'An toàn':pink, 'Kiến thức':brown, 'Hình ảnh nghề':gray,
@@ -184,7 +198,9 @@ CREATE TABLE (
   "Chủ đề" RICH_TEXT,
   "Nội dung chính" RICH_TEXT,
   "CTA" RICH_TEXT,
-  "Mục tiêu" RICH_TEXT
+  "Mục tiêu" RICH_TEXT,
+  "Chờ gì" RICH_TEXT,
+  "Phương án B" RICH_TEXT
 )
 ```
 
@@ -229,7 +245,29 @@ theme (retention month → `Chăm sóc KH`; launch month → `Giá trị`). For 
 drop from the largest bucket. Tally the mix before writing rows and again in the Step 9 report
 — arithmetic drift here is easy and shows up as a lopsided calendar.
 
+**Recurring series.** Give repeated formats a fixed name prefix in `Chủ đề` so followers learn to expect them, e.g. `🎬 Omini 45 giây: …` for real screen-recording demos and `🧩 Thử tài nhà thuốc #N: …` for quiz-style questions. Two series per month is enough. Pick names that can carry on into the next month.
+
+**Patterns that worked in 11/2026** (from the competitor scan):
+- **Free plan in numbers:** say exactly what's included (orders/day, liên thông/day, stores), never a vague "miễn phí". Competitors use "miễn phí trọn đời" (MISA) and price per day (KiotViet).
+- **Customer stories with a fixed structure:** background, pain before switching, one real owner quote, two hard numbers (e.g. minutes per invoice, minutes to close the day). Consent first.
+- **Guest experts on lives:** an HKD accountant or a pharmacist adds authority and keeps tax questions off Omini's own promises.
+- **Owner-to-owner posts** (polls, "nói thật với nhau"): no competitor writes in this voice. Feed poll results into the month-end tổng kết.
+
 Weekly recaps land on 7/14/21/28 (or nearest Sunday). When a recap day collides with a holiday, **combine**: title becomes `🎉 <Holiday> + Tóm tắt tuần N`, content lists both the holiday angle and the recap bullets.
+
+### Step 6b — Gate check
+
+Before creating rows, go through the payload and flag every row that cannot be written today. Typical triggers:
+
+| Trigger | Example |
+|---|---|
+| Event not yet happened | Draw results, live recap, end-of-month numbers |
+| Approval pending | Contest rules, prize structure, legal review |
+| Feature not released or not QA'd | Check the sprint page's product-proof table. A feature allowed as a "teaser" there is **not** gated; write it as a teaser. |
+| Consent or real data needed | Customer case study, testimonial video |
+| Asset not built | A CTA like `Tải checklist` with no file behind it, a quiz link that doesn't exist yet |
+
+For each flagged row: set `Trạng thái = Chờ điều kiện`, write `Chờ gì`, write `Phương án B`. Don't flag a row just because its topic is legal or sensitive; flag it only if something concrete is missing. And don't keep a row whose only purpose is to explain a process that isn't decided yet. Ask the user whether it's worth a slot (in 11/2026 the user removed such a row as useless).
 
 ### Step 7 — Batch-create rows
 
@@ -271,6 +309,25 @@ WHERE "Chủ đề" LIKE '%tiệm%' OR "Nội dung chính" LIKE '%tiệm%'
 Must return zero rows. Patch offenders with `mcp__notion-update-page`
 (`command: "update_properties"`, one call per row).
 
+**Allowed exception:** official document numbers keep their hyphens (`CV 934/TTYQG-DA`,
+`TT 18/2026/TT-BYT`, `COVID-19`). Rewriting them corrupts the reference. Read each flagged
+row and list these exceptions in the report rather than "fixing" them.
+
+**SQL sees trashed rows.** A row moved to Trash still comes back from SQL mode, so a deleted
+date shows up as a duplicate in the coverage check. Before treating a duplicate as real,
+`fetch` the extra page: a `deleted` attribute on `<page>` means it's in Trash and harmless.
+View mode (`mode: "view"`) excludes trashed rows by default.
+
+**3. Gating** — every gated row has its condition and its backup:
+
+```sql
+SELECT "Ngày" FROM "collection://<ds_id>"
+WHERE "Trạng thái" = 'Chờ điều kiện'
+  AND ("Chờ gì" IS NULL OR "Chờ gì" = '' OR "Phương án B" IS NULL OR "Phương án B" = '')
+```
+
+Must return zero rows. Run the brand-voice check on `Chờ gì` and `Phương án B` too; they are Vietnamese copy.
+
 ### Step 9 — Report & suggest next steps
 
 Output to the user:
@@ -280,7 +337,7 @@ Output to the user:
 
 Then **always surface the downstream pipeline** so the plan doesn't stall as a static table. Present it as concrete, ordered next steps — a plan only has value once its rows become drafted, scheduled posts:
 
-1. **Draft each post** → `chatgpt-create-pharmacy-post` (Platform) or `chatgpt-create-omini-care-post` (Care). Each draft saves a `post.txt` + `image.png` in a per-day folder.
+1. **Draft each post** → `chatgpt-create-pharmacy-post` (Platform) or `chatgpt-create-omini-care-post` (Care). Each draft saves a `post.txt` + `image.png` in a per-day folder. Build the manifest from `Lên lịch` rows only; leave `Chờ điều kiện` rows out until their condition is met, or draft their `Phương án B` instead.
 2. **Schedule the drafts** → `facebook-schedule-business-suite` pushes each day's folder into the Business Suite content calendar at a chosen time (default 19:00).
 3. *(Optional)* Cross-post finished media → `facebook-post-media`, `zalo-post-timeline`, `tiktok-share-post-video`, `youtube-share-post-video`.
 
@@ -288,8 +345,8 @@ End by **offering to kick off step 1 now** (or to print the plan as DRY_RUN mark
 
 ## Rules
 
-1. **Never deviate from the 7-column schema.** Old plans depend on it for downstream automation.
-2. **Always use `Lên lịch` as the initial status.** Never publish-by-default.
+1. **Never deviate from the 7 core columns.** Old plans depend on them for downstream automation. The 2 gating columns (`Chờ gì`, `Phương án B`) are the only additions; no script reads them, so adding them to an older plan is safe.
+2. **Always use `Lên lịch` as the initial status**, or `Chờ điều kiện` for gated rows (Step 6b). Never publish-by-default.
 3. **Date format is `DD/MM/YYYY` everywhere** — title, holiday tags, prose. Vietnamese reading convention.
 4. **Holiday tags use leading emoji + Vietnamese name + `(DD/MM)`** so they're visually scannable in the database view.
 5. **Don't auto-generate marketing copy from thin air.** Base each row on:
@@ -298,7 +355,7 @@ End by **offering to kick off step 1 now** (or to print the plan as DRY_RUN mark
    - The current season (for Care)
    - The holiday list (override any of the above)
 6. **Vietnamese only** for `Chủ đề`, `Nội dung chính`, `CTA`, `Mục tiêu`. The schema labels themselves are Vietnamese. Obey the **Brand voice** section above: no `tiệm`, no dash punctuation.
-7. **CTA vocabulary is fixed** — pick from: `Dùng thử`, `Dùng thử ngay`, `Lưu bài`, `Tư vấn`, `Tư vấn miễn phí`, `Theo dõi`, `Xem video`, `Xem hướng dẫn`, `Đăng ký live`, `Tham gia group`, `Tải checklist`, `Tải giáo án`, `Xem báo cáo`. Don't invent new ones.
+7. **CTA vocabulary is fixed** — pick from: `Dùng thử`, `Dùng thử ngay`, `Lưu bài`, `Tư vấn`, `Tư vấn miễn phí`, `Theo dõi`, `Xem video`, `Xem hướng dẫn`, `Đăng ký live`, `Tham gia group`, `Tải checklist`, `Tải giáo án`, `Xem báo cáo`, `Bình luận` (polls), `Đăng ký nhận thông báo` (teasers for unreleased features). Don't invent new ones.
 8. **DRY_RUN mode prints to stdout, never to Notion.** Useful for review before bulk creation.
 9. **Confirm with user before pushing 30+ rows** if you're unsure about the theme direction — those rows live under the user's brand.
 
@@ -334,10 +391,11 @@ Step 8 verification afterwards.
 - Don't reuse `Ngày` titles across months — they're unique per row.
 - Don't skip the `is_pending` / publishing-mechanics for plans — those concerns belong to the downstream publishers (`facebook-post-media`, `zalo-post-timeline`).
 - Don't generate >31 rows. If the user asks for "all of Q3," create three separate monthly plans, not one mega-plan.
-- Don't add columns. If user requests a new field, suggest a new view or a separate per-row property in a **future** version — current downstream scripts assume exactly these 7 columns.
+- Don't add columns beyond the 7 core + 2 gating ones. If the user requests another field, suggest a new view first.
 
 ## References
 
+- `references/competitor-patterns.md` — What competitor pages do, which tactics transfer, and the gaps Omini can own. Refresh it every few months.
 - `references/vn-holidays.md` — Curated Vietnamese + international observances relevant to pharmacy/health/family content. Loaded on demand. Fixed-date only.
 - `scripts/lunar_holidays.py` — Resolves lunar holidays (Tết, Vu Lan, Trung Thu, Ông Công Ông Táo…) for any solar month. Ho Ngoc Duc conversion, UTC+7. Stdlib only, no deps. Verified against published dates for Tết 2024/2025/2026, Trung Thu 2024/2026, Vu Lan 2026.
 - Example plans: `Content Plan Omini Platform 06/2026`, `Content Plan Omini Care 06/2026`, `Content Plan Omini Platform 08/2026` (Notion).
