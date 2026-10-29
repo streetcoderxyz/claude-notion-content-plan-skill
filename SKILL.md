@@ -144,7 +144,7 @@ If `PRODUCT` is `Omini Platform`, also fetch the GTM roadmap to pick the right p
 
 **Query each prior month's data source separately** (`mode: "rows"`, one call per month). A single SQL query across two data sources needs a Notion Business plan, and this workspace doesn't have one; the call fails with `entitlement_required`.
 
-Also read `references/competitor-patterns.md` before drafting. It records what Vietnamese pharmacy-software and pharma pages (Buymed, MISA, KiotViet, Sapo, TLGo) do, and the gaps none of them fill. Use it to pick formats and series, not to copy topics.
+Also read `references/competitor-patterns.md` before drafting. It records what Vietnamese pharmacy-software and pharma pages (Buymed, MISA, KiotViet, Sapo, TLGo) do, and the gaps none of them fill. Use it to pick formats and series, not to copy topics. For **Omini Care**, read `references/competitor-patterns-care.md` instead (Dạ Hương, Lactacyd, Pharmacity, Hasaki).
 
 Prior months also set the **format arc** — read the wrapper-page callout of the previous
 month and advance it rather than repeating it (e.g. 06 text long-form → 07 media comeback →
@@ -395,6 +395,7 @@ Step 8 verification afterwards.
 
 ## References
 
+- `references/competitor-patterns-care.md` — Omini Care peers (Dạ Hương, Lactacyd, Pharmacity, Hasaki): what performed, what transfers, what not to copy.
 - `references/competitor-patterns.md` — What competitor pages do, which tactics transfer, and the gaps Omini can own. Refresh it every few months.
 - `references/vn-holidays.md` — Curated Vietnamese + international observances relevant to pharmacy/health/family content. Loaded on demand. Fixed-date only.
 - `scripts/lunar_holidays.py` — Resolves lunar holidays (Tết, Vu Lan, Trung Thu, Ông Công Ông Táo…) for any solar month. Ho Ngoc Duc conversion, UTC+7. Stdlib only, no deps. Verified against published dates for Tết 2024/2025/2026, Trung Thu 2024/2026, Vu Lan 2026.
